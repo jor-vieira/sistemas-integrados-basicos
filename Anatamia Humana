@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quiz – Anatomia Humana (Generalidades e Osteologia)</title>
+<style>
+  :root{
+    /* Imagem do template quadrado 1024×1024 */
+    --bg-url: url("template2.png");
+    --template-ratio: 1;
+
+    /* Cores de estados */
+    --ok: #16a34a;
+    --bad: #dc2626;
+    --ink: #0f172a;
+    --card: rgba(255,255,255,0); /* caixas são do template */
+    --hover: rgba(15,23,42,0.06);
+    --shadow: 0 6px 24px rgba(0,0,0,.12);
+  }
+
+  /* --- ZOOM GLOBAL em 65% (desktop) --- */
+  html{ zoom: .65; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  @supports not (zoom: .65){
+    /* Fallback para Firefox/Safari (desktop) */
+    .app{
+      transform: scale(.65);
+      transform-origin: top center;
+      width: calc(100% / .65);
+    }
+  }
+  /* Em telas pequenas, não reduzir */
+  @media (max-width: 700px){
+    html{ zoom: 1; }
+    @supports not (zoom: 1){
+      .app{ transform: none; width: auto; }
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Ubuntu", sans-serif;
+    color: var(--ink);
+    background:#0b2530;
+    display:flex;
+    min-height:100svh;
+    justify-content:center;
+    align-items:center;
+    padding:16px;
+  }
+
+  .app{ width:min(100%, 980px); }
+
+  .bar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin:0 0 10px 0; color:#e6f0f3;
+    gap:12px; flex-wrap:wrap;
+  }
+  .bar .title{ font-weight:700; letter-spacing:.2px; }
+  .bar .meta{ opacity:.9; font-size:.95rem; }
+
+  .stage{
+    position:relative; width:100%;
+    aspect-ratio: 1 / var(--template-ratio);
+    background-image: var(--bg-url);
+    background-size: cover; background-position: center;
+    border-radius: 18px; box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+
+  /* ------ ÁREAS CLICÁVEIS SOBRE O TEMPLATE ------ */
+
+  /* Caixa da PERGUNTA (quadro superior do template) */
+  .qbox{
+    position:absolute;
+    left: 10%; top: 22%; width: 80%; height: 13%;
+    padding: 10px 16px;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center; font-weight:700;
+    font-size: clamp(18px, 2.2vw, 28px);
+    border-radius: 18px; background: var(--card);
+    pointer-events: none; /* Só exibe texto; cliques são nas opções */
+    /* MOBILE FIX: melhora quebra e hifenização */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    hyphens: auto;
+    line-height: 1.2;
+  }
+
+  /* Grade das respostas – 4 opções (2×2) */
+  .answers{
+    position:absolute;
+    left: 10%; top: 42%; width: 80%; height: 36%;
+    display:grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+    gap: clamp(10px, 2vw, 18px);
+  }
+
+  .option{
+    border-radius: 16px; background: var(--card);
+    padding: 10px 14px;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    font-size: clamp(14px, 1.8vw, 18px);
+    font-weight:600; line-height:1.25;
+    cursor:pointer; user-select:none;
+    transition: transform .06s ease, box-shadow .06s ease, background .2s ease;
+    outline: 3px solid transparent;
+    color: var(--ink);
+
+    /* MOBILE FIX: garante que o texto respeite a caixa */
+    white-space: normal;          /* permite múltiplas linhas */
+    overflow-wrap: anywhere;      /* quebra palavras longas */
+    word-break: normal;
+    hyphens: auto;                /* hifenização onde suportado */
+    max-height: 100%;             /* nunca ultrapassar a caixa */
+    overflow: hidden;             /* corta excessos em casos extremos */
+    padding-inline: 10px;
+  }
+  .option:hover{ background: var(--hover); transform: translateY(-1px); }
+  .option:active{ transform: translateY(0); }
+
+  .option.correct{
+    outline-color: var(--ok);
+    box-shadow: 0 0 0 4px rgba(22,163,74,.3);
+    background: rgba(22,163,74,.12);
+    color:#052e16;
+  }
+  .option.wrong{
+    outline-color: var(--bad);
+    box-shadow: 0 0 0 4px rgba(220,38,38,.3);
+    background: rgba(220,38,38,.10);
+    color:#450a0a;
+  }
+  .option.disabled{ pointer-events:none; opacity:.95; }
+
+  .controls{
+    display:flex; gap:10px; margin-top:12px; justify-content:space-between; align-items:center;
+  }
+  .btn{
+    background:#e6f0f3; color:#052533; border:0; padding:10px 14px;
+    border-radius: 12px; font-weight:700; cursor:pointer;
+    box-shadow: var(--shadow); transition: transform .06s ease, filter .2s ease;
+  }
+  .btn:hover{ filter: brightness(1.03); transform: translateY(-1px); }
+  .btn:active{ transform: translateY(0); }
+  .btn.secondary{ background:#bfe4ef; }
+  .btn.ghost{ background:transparent; color:#cde7ef; box-shadow:none; border:1.5px solid #cde7ef40; }
+
+  .foot{
+    margin-top:10px; color:#cde7ef; opacity:.9; font-size:.95rem;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+  }
+
+  /* Relatório de erro (se algo quebrar) */
+  #err{
+    margin-top:10px; color:#fee; background:#7f1d1d; padding:8px 10px; border-radius:8px;
+    font-size:.9rem; white-space:pre-wrap; display:none;
+  }
+
+  /* Acessibilidade: foco visível */
+  .option:focus-visible, .btn:focus-visible{ outline:3px solid #38bdf8; outline-offset:2px; }
+
+  /* ================== MOBILE FIXES ADICIONAIS ==================
+     Ajustes finos só para telas realmente pequenas (celular).  */
+  @media (max-width: 480px){
+    .qbox{
+      font-size: clamp(12px, 4.5vw, 18px);
+      line-height: 1.2;
+      padding: 8px 10px;
+    }
+    .answers{
+      gap: 8px;                 /* quadros mais próximos */
+    }
+    .option{
+      font-size: clamp(12px, 3.8vw, 16px);
+      line-height: 1.15;        /* cabe mais texto por caixa */
+      padding: 8px 8px;
+      border-radius: 14px;
+    }
+  }
+
+  /* iOS Safari costuma “inflar” fonte; força ajuste consistente */
+  @supports (-webkit-touch-callout: none){
+    .option, .qbox{ -webkit-text-size-adjust: 100%; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="bar">
+      <div class="title">Quiz — Anatomia Humana (Generalidades e Osteologia)</div>
+      <div class="meta"><span id="progress">1/1</span> · Pontos: <span id="score">0</span></div>
+    </div>
+
+    <div class="stage" aria-live="polite">
+      <div class="qbox" id="question">Carregando pergunta…</div>
+      <div class="answers" id="answers" role="group" aria-label="Opções de resposta"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn ghost" id="resetBtn">Reiniciar</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn secondary" id="showAnsBtn" title="Mostra a correta se você travar">Mostrar correta</button>
+        <button class="btn" id="nextBtn">Próxima</button>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div>Desenvolvido por Jorge Vieira.</div>
+      <div>Atalhos: <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> para responder · <kbd>N</kbd> próxima</div>
+    </div>
+
+    <pre id="err"></pre>
+  </div>
+
+<script>
+/* ========= BANCO DE QUESTÕES ========= */
+const QUESTIONS = [
+  /* --- Generalidades anatômicas --- */
+  { q: "Na posição anatômica padrão, as palmas das mãos estão:",
+    answers: ["Voltadas para trás (pronação)","Voltadas para frente (supinação)","Unidas sobre o tórax","Voltadas medialmente uma para a outra"],
+    correctIndex: 1 },
+  { q: "O plano que divide o corpo em metades direita e esquerda iguais é o:",
+    answers: ["Plano frontal (coronal)","Plano transverso (horizontal)","Plano mediano (sagital mediano)","Plano oblíquo"],
+    correctIndex: 2 },
+  { q: "O termo 'proximal' significa:",
+    answers: ["Mais distante da origem de um membro","Mais próximo da origem de um membro","Mais próximo do plano mediano","Mais superficial"],
+    correctIndex: 1 },
+  { q: "Em anatomia, 'cranial' é sinônimo de:",
+    answers: ["Superior","Inferior","Anterior","Posterior"],
+    correctIndex: 0 },
+  { q: "O eixo em torno do qual ocorrem movimentos nos planos sagitais é o:",
+    answers: ["Eixo transversal (laterolateral)","Eixo longitudinal","Eixo anteroposterior","Eixo vertical-sagital"],
+    correctIndex: 0 },
+  { q: "O movimento de afastar um segmento do plano mediano é chamado de:",
+    answers: ["Adução","Abdução","Flexão","Rotação interna"],
+    correctIndex: 1 },
+  { q: "Pronação do antebraço corresponde a:",
+    answers: ["Girar o rádio sobre a ulna deixando a palma para trás/baixo","Girar o rádio deixando a palma para frente/cima","Aproximar o antebraço do braço","Estender o cotovelo"],
+    correctIndex: 0 },
+  { q: "Estruturas presentes em ambos os lados do corpo (ex.: rins) são chamadas de:",
+    answers: ["Unilaterais","Ipsilaterais","Contralaterais","Bilaterais"],
+    correctIndex: 3 },
+  { q: "A cavidade que abriga o encéfalo é a:",
+    answers: ["Torácica","Abdominal","Pélvica","Craniana"],
+    correctIndex: 3 },
+  { q: "O tecido conjuntivo mineralizado que forma o esqueleto é o:",
+    answers: ["Cartilagem elástica","Cartilagem hialina","Osso","Fibrocartilagem"],
+    correctIndex: 2 },
+
+  /* --- Osteologia: células, matriz e revestimentos --- */
+  { q: "Células responsáveis pela reabsorção óssea são os:",
+    answers: ["Osteócitos","Osteoclastos","Osteoblastos","Condrócitos"],
+    correctIndex: 1 },
+  { q: "Células que sintetizam matriz osteoide e iniciam a mineralização:",
+    answers: ["Osteoblastos","Osteócitos","Osteoclastos","Fibroblastos"],
+    correctIndex: 0 },
+  { q: "Os osteócitos localizam-se em:",
+    answers: ["Lacunas do tecido ósseo","Canalículos dos vasos linfáticos","Pericôndrio","Canal de eferência venosa"],
+    correctIndex: 0 },
+  { q: "O principal mineral inorgânico depositado no osso é:",
+    answers: ["Sulfato de cálcio","Hidroxiapatita (fosfato de cálcio)","Cloreto de sódio","Carbonato de magnésio"],
+    correctIndex: 1 },
+  { q: "Membrana conjuntiva que reveste externamente o osso, exceto nas superfícies articulares:",
+    answers: ["Endósteo","Periósteo","Pericôndrio","Fáscia"],
+    correctIndex: 1 },
+  { q: "O revestimento que recobre as cavidades internas do osso é o:",
+    answers: ["Periósteo","Endósteo","Pericárdio","Epimísio"],
+    correctIndex: 1 },
+  { q: "O osso compacto e o esponjoso diferenciam-se principalmente por:",
+    answers: ["Composição química","Grau de mineralização idêntico","Arquitetura e densidade de trabéculas/sistemas de Havers","Tipo celular presente"],
+    correctIndex: 2 },
+  { q: "A unidade estrutural do osso compacto é a(o):",
+    answers: ["Trabécula","Osteona (sistema de Havers)","Canal de Volkmann","Lacuna"],
+    correctIndex: 1 },
+  { q: "O componente orgânico majoritário da matriz óssea é:",
+    answers: ["Colágeno tipo I","Elastina","Proteoglicanos","Colágeno tipo II"],
+    correctIndex: 0 },
+  { q: "A placa epifisária (linha epifisária no adulto) é formada por:",
+    answers: ["Cartilagem hialina","Cartilagem elástica","Fibrocartilagem","Tecido fibroso denso não modelado"],
+    correctIndex: 0 },
+
+  /* --- Tipos de ossos e exemplos --- */
+  { q: "Exemplo clássico de osso longo:", answers: ["Fêmur","Parietal","Escápula","Vértebra"], correctIndex: 0 },
+  { q: "Exemplo de osso plano:", answers: ["Fíbula","Parietal","Carpal escafóide","Patela"], correctIndex: 1 },
+  { q: "Exemplo de osso curto:", answers: ["Tíbia","Vértebra","Escafóide (carpo)","Esterno"], correctIndex: 2 },
+  { q: "Exemplo de osso sesamoide:", answers: ["Patela","Atlas","Úmero","Vômer"], correctIndex: 0 },
+  { q: "Parte central (haste) de um osso longo denomina-se:", answers: ["Epífise","Diáfise","Metáfise","Apófise"], correctIndex: 1 },
+  { q: "As extremidades de um osso longo chamam-se:", answers: ["Metáfises","Apófises","Epífises","Diáfises"], correctIndex: 2 },
+  { q: "Região de transição entre diáfise e epífise é a:", answers: ["Metáfise","Apófise","Trocânter","Tuberosidade"], correctIndex: 0 },
+  { q: "Nos ossos longos, a cavidade medular da diáfise contém principalmente, no adulto:", answers: ["Medula óssea vermelha","Medula óssea amarela","Linfa","Líquido sinovial"], correctIndex: 1 },
+  { q: "A medula óssea vermelha tem como principal função:", answers: ["Armazenar triglicerídeos","Produção de bile","Hematopoiese","Reservatório de cálcio"], correctIndex: 2 },
+  { q: "As artérias nutrícias costumam penetrar o osso por:", answers: ["Forames nutrícios da diáfise","Suturas cranianas","Cristas ilíacas","Canal vertebral"], correctIndex: 0 },
+
+  /* --- Osteogênese e crescimento --- */
+  { q: "A ossificação intramembranosa ocorre principalmente em:", answers: ["Ossos planos do crânio e parte da clavícula","Ossos longos dos membros","Vértebras","Costelas flutuantes"], correctIndex: 0 },
+  { q: "A ossificação endocondral caracteriza-se por:", answers: ["Formação direta a partir do mesênquima","Substituição de um molde de cartilagem hialina por osso","Deposição de osso sobre osso lamelar prévio","Ausência de centros de ossificação"], correctIndex: 1 },
+  { q: "O crescimento longitudinal dos ossos longos ocorre principalmente:", answers: ["No periósteo","Na placa epifisária","Na medula amarela","No endósteo"], correctIndex: 1 },
+  { q: "O fechamento das epífises ocorre quando:", answers: ["A placa epifisária ossifica e desaparece","O periósteo se duplica","A medula torna-se vermelha","A osteoclastogênese cessa"], correctIndex: 0 },
+  { q: "Fraturas que envolvem a placa epifisária são importantes porque:", answers: ["Não consolidam","Podem alterar o crescimento do osso","Nunca doem","Não sangram"], correctIndex: 1 },
+
+  /* --- Coluna vertebral e tórax ósseo --- */
+  { q: "Número total típico de vértebras no adulto:", answers: ["26","30","33","36"], correctIndex: 2 },
+  { q: "Característica das vértebras cervicais típicas:", answers: ["Processo odontoide","Forames transversários","Facetas costais no corpo","Espinhoso muito longo e caudal"], correctIndex: 1 },
+  { q: "O atlas (C1) diferencia-se por:", answers: ["Não possuir corpo vertebral","Possuir processo odontoide","Possuir facetas costais","Fixar o diafragma"], correctIndex: 0 },
+  { q: "O áxis (C2) possui como característica principal:", answers: ["Tubérculo anterior","Forame magno","Dente (processo odontoide)","Crista mediana anterior"], correctIndex: 2 },
+  { q: "As costelas verdadeiras correspondem a:", answers: ["1ª a 7ª","8ª a 12ª","1ª a 5ª","7ª a 12ª"], correctIndex: 0 },
+
+  /* --- Cintura escapular e membro superior --- */
+  { q: "A escápula é um osso:", answers: ["Plano, com acrômio e processo coracoide","Curto, com dente do áxis","Irregular, com forames transversários","Sesamoide do bíceps"], correctIndex: 0 },
+  { q: "A cabeça do úmero articula-se com:", answers: ["Cavidade glenoidal da escápula","Cotiloide do ílio","Fossa troclear da ulna","Cabeça do rádio"], correctIndex: 0 },
+  { q: "No antebraço, o rádio está situado:", answers: ["Medial (lado do mínimo)","Lateral (lado do polegar)","Posterior","Anterior"], correctIndex: 1 },
+
+  /* --- Cintura pélvica e membro inferior --- */
+  { q: "O osso do quadril resulta da fusão de:", answers: ["Ílio, ísquio e púbis","Ílio, sacro e cóccix","Ílio e púbis","Ísquio e fêmur"], correctIndex: 0 },
+  { q: "O fêmur possui proeminências chamadas:", answers: ["Trocânter maior e menor","Túber da tíbia e maléolo","Espinha ilíaca e crista sacral","Processo coracoide e acrômio"], correctIndex: 0 },
+  { q: "A patela é um osso:", answers: ["Plano do tarso","Sesamoide no tendão do quadríceps","Curto do carpo","Irregular do crânio"], correctIndex: 1 },
+  { q: "O maior osso do tarso é o:", answers: ["Tálus","Calcâneo","Navicular","Cuboide"], correctIndex: 1 },
+
+  /* --- Suturas do crânio e termos de relação --- */
+  { q: "As suturas cranianas são:", answers: ["Sinoviais gínglimo","Fibrosas (sinartroses)","Cartilaginosas secundárias","Sinoviais esferoides"], correctIndex: 1 },
+  { q: "‘Ipsilateral’ significa:", answers: ["No lado oposto","No mesmo lado","Mais profundo","Mais superficial"], correctIndex: 1 },
+  { q: "‘Contralateral’ refere-se a estruturas:", answers: ["No mesmo lado","Em lados opostos","No plano mediano","Anterior ao esterno"], correctIndex: 1 }
+];
+
+/* ======= Lógica do jogo ======= */
+let order = Array.from({length: QUESTIONS.length}, (_, i) => i);
+let idx = 0;
+let score = 0;
+
+const elQ = document.getElementById("question");
+const elA = document.getElementById("answers");
+const elNext = document.getElementById("nextBtn");
+const elShow = document.getElementById("showAnsBtn");
+const elReset = document.getElementById("resetBtn");
+const elScore = document.getElementById("score");
+const elProg = document.getElementById("progress");
+const elErr = document.getElementById("err");
+
+/* Captura global de erros para aparecer na página */
+window.addEventListener("error", (e)=>{
+  if (!elErr) return;
+  elErr.style.display = "block";
+  elErr.textContent = `JS error: ${e.message}\n${e.filename}:${e.lineno}:${e.colno}`;
+});
+window.addEventListener("unhandledrejection", (e)=>{
+  if (!elErr) return;
+  elErr.style.display = "block";
+  elErr.textContent = `Promise rejection: ${e.reason}`;
+});
+
+function shuffle(arr){
+  for (let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function updateMeta(){
+  elProg.textContent = `${idx+1}/${QUESTIONS.length}`;
+}
+
+function renderQuestion() {
+  if (!QUESTIONS.length){ elQ.textContent = "Sem perguntas carregadas."; return; }
+  const q = QUESTIONS[order[idx]];
+  elQ.textContent = q.q;
+
+  elA.innerHTML = "";
+  q.answers.forEach((text, i) => {
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.type = "button";
+    btn.textContent = text;
+    btn.addEventListener("click", () => handleAnswer(i));
+    elA.appendChild(btn);
+  });
+
+  updateMeta();
+  elNext.disabled = true;
+}
+
+function handleAnswer(choiceIndex){
+  const q = QUESTIONS[order[idx]];
+  const nodes = [...elA.querySelectorAll(".option")];
+
+  nodes.forEach(n => n.classList.add("disabled"));
+
+  if (choiceIndex === q.correctIndex) {
+    nodes[choiceIndex].classList.add("correct");
+    score++;
+  } else {
+    nodes[choiceIndex].classList.add("wrong");
+    nodes[q.correctIndex].classList.add("correct");
+  }
+
+  elScore.textContent = score;
+  elNext.disabled = false;
+}
+
+function showCorrect(){
+  const q = QUESTIONS[order[idx]];
+  const nodes = [...elA.querySelectorAll(".option")];
+  nodes.forEach(n => n.classList.add("disabled"));
+  nodes[q.correctIndex].classList.add("correct");
+  elNext.disabled = false;
+}
+
+function next(){
+  if (idx < order.length - 1){
+    idx++;
+    renderQuestion();
+  } else {
+    finish();
+  }
+}
+
+function finish(){
+  elQ.textContent = `Fim! Você acertou ${score} de ${QUESTIONS.length}.`;
+  elA.innerHTML = "";
+  elNext.disabled = true;
+}
+
+function reset(){
+  score = 0; idx = 0;
+  order = Array.from({length: QUESTIONS.length}, (_, i) => i);
+  shuffle(order);
+  elScore.textContent = score;
+  renderQuestion();
+}
+
+/* Controles */
+elNext.addEventListener("click", next);
+elShow.addEventListener("click", showCorrect);
+elReset.addEventListener("click", reset);
+
+/* Teclado: 1–4 para respostas, N para próxima */
+window.addEventListener("keydown", (e)=>{
+  if (["1","2","3","4"].includes(e.key)){
+    const i = parseInt(e.key,10) - 1;
+    const btn = elA.querySelectorAll(".option")[i];
+    if (btn && !btn.classList.contains("disabled")) btn.click();
+  }
+  if (e.key.toLowerCase() === "n" && !elNext.disabled){
+    next();
+  }
+});
+
+/* Inicialização segura */
+(function init(){
+  shuffle(order);
+  renderQuestion();
+})();
+</script>
+</body>
+</html>
